@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalkulator Simulasi Beasiswa</title>
+  <meta name="description"
+    content="Cek kelayakan beasiswa Anda berdasarkan IPK dan pendapatan orang tua secara cepat dan mudah." />
+
+
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Import font Inter dari Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    /* ── Variabel warna — tema Biru & Oranye ──────────── */
+    /* Cukup ubah nilai di sini untuk mengganti seluruh skema warna */
+    :root {
+      /* Latar belakang — gradasi biru muda ke oranye lembut */
+      --bg-gradient-start: #dbeafe;
+      /* blue-100  */
+      --bg-gradient-end: #fed7aa;
+      /* orange-200 */
+
+      /* Card */
+      --card-bg: #ffffff;
+      --card-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+
+      /* Input */
+      --input-border: #cbd5e1;
+      --input-focus: #2563eb;
+      /* blue-600 — warna ring fokus */
+
+      /* Teks */
+      --label-color: #1e3a8a;
+      /* blue-900 — kontras kuat di latar terang */
+      --hint-color: #64748b;
+      /* slate-500 */
+
+      /* Tombol — biru solid #2563eb, hover biru lebih gelap #1d4ed8 */
+      --btn-bg: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      --btn-hover-bg: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+      --btn-hover-shadow: 0 8px 25px rgba(37, 99, 235, 0.45);
+
+      /* Icon wrap header — biru ke oranye */
+      --icon-bg: linear-gradient(135deg, #2563eb 0%, #ea580c 100%);
+      --icon-shadow: rgba(37, 99, 235, 0.35);
+
+      /* Badge — transparan gelap agar kontras di latar terang */
+      --badge-bg: rgba(37, 99, 235, 0.15);
+      --badge-color: #1d4ed8;
+
+      /* Hasil LAYAK — tetap hijau (makna: lolos) */
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --green-border: #bbf7d0;
+
+      /* Hasil TIDAK LAYAK — tetap merah (makna: gagal) */
+      --red: #dc2626;
+      --red-bg: #fff1f2;
+      --red-border: #fecdd3;
+    }
+
+    /* ── Body — latar gradien biru muda → oranye lembut ─ */
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      padding: 24px 16px;
+    }
+
+    /* ── Wrapper pembungkus card ─────────────────────── */
+    .wrapper {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    /* ── Badge di atas card ──────────────────────────── */
+    /* Latar terang sehingga badge pakai warna biru transparan */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--badge-bg);
+      color: var(--badge-color);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+    }
+
+    /* ── Card utama ──────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: var(--card-shadow);
+      padding: 40px 36px 36px;
+      animation: slideUp 0.5s ease both;
+    }
+
+    /* Animasi masuk dari bawah */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Header card ─────────────────────────────────── */
+    .card-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    /* Kotak ikon — gradasi biru ke oranye */
+    .icon-wrap {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: var(--icon-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 2rem;
+      box-shadow: 0 8px 20px var(--icon-shadow);
+    }
+
+    /* Judul h1 — biru tua untuk aksen tema */
+    .card-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1e3a8a;
+      /* blue-900 — aksen biru tua sesuai ketentuan */
+      line-height: 1.3;
+    }
+
+    .card-header p {
+      font-size: 0.875rem;
+      color: var(--hint-color);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* ── Form group (label + input) ──────────────────── */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--label-color);
+      margin-bottom: 8px;
+    }
+
+    /* Wrapper untuk input + label satuan */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 13px 16px;
+      border: 1.5px solid var(--input-border);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: #111827;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      outline: none;
+    }
+
+    /* Hilangkan spinner bawaan browser untuk input number */
+    .input-wrapper input::-webkit-outer-spin-button,
+    .input-wrapper input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+    }
+
+    /* State fokus — ring biru #2563eb sesuai ketentuan */
+    .input-wrapper input:focus {
+      border-color: var(--input-focus);
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Label satuan di dalam input (pojok kanan) */
+    .input-unit {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--hint-color);
+      pointer-events: none;
+      background: #f8fafc;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    /* Hint teks kecil di bawah input */
+    .input-hint {
+      font-size: 0.75rem;
+      color: var(--hint-color);
+      margin-top: 5px;
+    }
+
+    /* ── Divider tipis ───────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1.5px solid #e2e8f0;
+      margin: 24px 0;
+    }
+
+    /* ── Tombol Cek — biru (#2563eb), hover biru gelap (#1d4ed8) */
+    .btn-cek {
+      width: 100%;
+      padding: 15px;
+      background: var(--btn-bg);
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Efek kilap saat hover */
+    .btn-cek::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    /* Hover — berubah ke biru lebih gelap + naik sedikit */
+    .btn-cek:hover {
+      background: var(--btn-hover-bg);
+      transform: translateY(-2px);
+      box-shadow: var(--btn-hover-shadow);
+    }
+
+    .btn-cek:hover::after {
+      opacity: 1;
+    }
+
+    .btn-cek:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    /* ── Area hasil ──────────────────────────────────── */
+    #hasil {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.5;
+      display: none;
+      /* Tersembunyi sampai ada hasil */
+      animation: fadeIn 0.4s ease both;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Kelas untuk hasil LAYAK — tetap hijau (makna: lolos) */
+    #hasil.layak {
+      color: var(--green);
+      background: var(--green-bg);
+      border: 1.5px solid var(--green-border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* Kelas untuk hasil TIDAK LAYAK — tetap merah (makna: gagal) */
+    #hasil.tidak-layak {
+      color: var(--red);
+      background: var(--red-bg);
+      border: 1.5px solid var(--red-border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* Detail syarat di bawah pesan utama */
+    .detail-syarat {
+      font-size: 0.8rem;
+      font-weight: 400;
+      margin-top: 4px;
+      opacity: 0.85;
+    }
+
+    /* ── Footer kelompok ─────────────────────────────── */
+    .footer-kelompok {
+      text-align: center;
+      margin-top: 28px;
+      padding-bottom: 8px;
+    }
+
+    /* Label "DIBUAT OLEH" — biru gelap agar terbaca di latar terang */
+    .footer-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1d4ed8;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* Daftar nama anggota kelompok */
+    .footer-members {
+      list-style: none;
+      /* Hilangkan bullet default */
+      padding: 0;
+      margin: 0 0 12px;
+      display: flex;
+      flex-wrap: wrap;
+      /* Bungkus ke baris berikutnya di layar kecil */
+      justify-content: center;
+      gap: 4px 18px;
+    }
+
+    .footer-members li {
+      font-size: 13px;
+      color: #374151;
+      /* abu gelap — kontras di latar terang */
+      position: relative;
+    }
+
+    /* Titik pemisah antar nama (kecuali nama terakhir) */
+    .footer-members li:not(:last-child)::after {
+      content: '·';
+      position: absolute;
+      right: -11px;
+      color: #9ca3af;
+    }
+
+    .footer-copy {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    /* ── Responsif untuk layar kecil ─────────────────── */
+    @media (max-width: 480px) {
+      .card {
+        padding: 28px 20px 24px;
+      }
+
+      .card-header h1 {
+        font-size: 1.3rem;
+      }
+    }
+
+    /* Pada layar sangat kecil, tumpuk nama ke bawah */
+    @media (max-width: 360px) {
+      .footer-members {
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .footer-members li::after {
+        display: none;
+        /* Sembunyikan titik pemisah saat vertikal */
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =====================================================
+       STRUKTUR HTML
+       ===================================================== -->
+  <div class="wrapper">
+
+    <!-- Badge di atas card -->
+    <div class="badge">🎓 Simulasi Beasiswa</div>
+
+    <!-- Card utama -->
+    <div class="card">
+
+      <!-- Header card -->
+      <div class="card-header">
+        <div class="icon-wrap">📋</div>
+        <h1>Kalkulator Simulasi Beasiswa</h1>
+        <p>Masukkan data IPK dan pendapatan orang tua untuk mengecek kelayakan beasiswa Anda.</p>
+      </div>
+
+      <!-- ── Formulir input ── -->
+
+      <!-- Input IPK -->
+      <div class="form-group">
+        <label for="inputIPK">Indeks Prestasi Kumulatif (IPK)</label>
+        <div class="input-wrapper">
+          <!-- step="0.01" memungkinkan input desimal dua angka -->
+          <input type="number" id="inputIPK" placeholder="Contoh: 3.50" step="0.01" min="0" max="4"
+            aria-label="Masukkan nilai IPK" />
+          <span class="input-unit">/ 4.00</span>
+        </div>
+        <p class="input-hint">Nilai antara 0.00 – 4.00</p>
+      </div>
+
+      <!-- Input Pendapatan Orang Tua -->
+      <div class="form-group">
+        <label for="inputPendapatan">Pendapatan Orang Tua (per bulan)</label>
+        <div class="input-wrapper">
+          <input type="number" id="inputPendapatan" placeholder="Contoh: 2500000" min="0"
+            aria-label="Masukkan pendapatan orang tua dalam Rupiah" />
+          <span class="input-unit">IDR</span>
+        </div>
+        <p class="input-hint">Dalam satuan Rupiah (Rp)</p>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Tombol cek -->
+      <button class="btn-cek" id="btnCek" onclick="cekKelayakan()" aria-label="Cek status kelayakan beasiswa">
+        🔍 Cek Status Kelayakan
+      </button>
+
+      <!-- Area hasil — tersembunyi di awal, muncul setelah tombol diklik -->
+      <div id="hasil" role="alert" aria-live="polite"></div>
+
+    </div><!-- /card -->
+
+    <!-- Footer kelompok -->
+    <footer class="footer-kelompok">
+      <p class="footer-title">Dibuat oleh</p>
+      <ul class="footer-members">
+        <li>Rizki Tri Amelia</li>
+        <li>Shelfia Anatasya D.A</li>
+        <li>Yeni</li>
+        <li>Restu Yunisa Zahirah</li>
+        <li>Mulandari Putri</li>
+      </ul>
+      <p class="footer-copy">© 2026 </p>
+    </footer>
+
+  </div><!-- /wrapper -->
+
+
+  <!-- JavaScript eksternal — logika ada di file script.js -->
+  <script src="script.js"></script>
+
+</body>
+
+</html>
